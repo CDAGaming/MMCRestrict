@@ -23,12 +23,11 @@ import org.spongepowered.api.world.Location;
 
 public class Sendtochest implements CommandExecutor {
     private final Main plugin;
+    int count = 0;
 
     public Sendtochest(Main plugin) {
         this.plugin = plugin;
     }
-
-    int count = 0;
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
@@ -75,7 +74,7 @@ public class Sendtochest implements CommandExecutor {
                         }
                     }
                 });
-                player.sendMessage(plugin.fromLegacy("&e" +count+" blocks have been put into a chest"));
+                player.sendMessage(plugin.fromLegacy("&e" + count + " blocks have been put into a chest"));
             }
         });
         return CommandResult.success();

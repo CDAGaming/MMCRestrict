@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class EventListener {
 
     private Main plugin;
+
     public EventListener(Main instance) {
         plugin = instance;
     }
@@ -406,7 +407,7 @@ public class EventListener {
                             if (!item.getBanreason().isEmpty()) {
                                 reason = " &3- &7" + item.getBanreason();
                             }
-                            plugin.logToFile("action-log", item.getItemname()+ " was removed from " +player.getName()+ "'s inventory" );
+                            plugin.logToFile("action-log", item.getItemname() + " was removed from " + player.getName() + "'s inventory");
                             player.sendMessage(plugin.fromLegacy("&c" + item.getItemname() + " is banned and has been removed from your inventory" + reason));
                         }
                     }

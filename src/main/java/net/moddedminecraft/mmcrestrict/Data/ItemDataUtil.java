@@ -22,6 +22,10 @@ public class ItemDataUtil {
         return itemname;
     }
 
+    public void setItemname(String itemname) {
+        this.itemname = itemname;
+    }
+
     public String getItemid() {
         return itemid;
     }
@@ -30,56 +34,52 @@ public class ItemDataUtil {
         return banreason;
     }
 
-    public Boolean getOwnershipbanned() {
-        return ownershipbanned;
-    }
-
-    public Boolean getUsagebanned() {
-        return usagebanned;
-    }
-
-    public Boolean getBreakingbanned() {
-        return breakingbanned;
-    }
-
-    public Boolean getPlacingbanned() {
-        return placingbanned;
-    }
-
-    public Boolean getDropbanned() {
-        return dropbanned;
-    }
-
-    public Boolean getWorldbanned() {
-        return worldbanned;
-    }
-
-    public void setItemname(String itemname) {
-        this.itemname = itemname;
-    }
-
     public void setBanreason(String banreason) {
         this.banreason = banreason;
+    }
+
+    public Boolean getOwnershipbanned() {
+        return ownershipbanned;
     }
 
     public void setOwnershipbanned(Boolean ownershipbanned) {
         this.ownershipbanned = ownershipbanned;
     }
 
+    public Boolean getUsagebanned() {
+        return usagebanned;
+    }
+
     public void setUsagebanned(Boolean usagebanned) {
         this.usagebanned = usagebanned;
+    }
+
+    public Boolean getBreakingbanned() {
+        return breakingbanned;
     }
 
     public void setBreakingbanned(Boolean breakingbanned) {
         this.breakingbanned = breakingbanned;
     }
 
+    public Boolean getPlacingbanned() {
+        return placingbanned;
+    }
+
     public void setPlacingbanned(Boolean placingbanned) {
         this.placingbanned = placingbanned;
     }
 
+    public Boolean getDropbanned() {
+        return dropbanned;
+    }
+
     public void setDropbanned(Boolean dropbanned) {
         this.dropbanned = dropbanned;
+    }
+
+    public Boolean getWorldbanned() {
+        return worldbanned;
     }
 
     public void setWorldbanned(Boolean worldbanned) {

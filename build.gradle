@@ -12,11 +12,11 @@ targetCompatibility = 1.8
 
 
 repositories {
-     maven { url "https://jitpack.io" }
-     maven { url "http://repo.spongepowered.org/maven" }
-     maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://jitpack.io" }
+    maven { url "http://repo.spongepowered.org/maven" }
+    maven { url "http://repo.maven.apache.org/maven2" }
 }
 dependencies {
-    testCompile group: 'junit', name: 'junit', version:'4.12'
-    compileOnly group: 'org.spongepowered', name: 'spongeapi', version:'7.1.0-SNAPSHOT'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly group: 'org.spongepowered', name: 'spongeapi', version: '7.1.0-SNAPSHOT'
 }

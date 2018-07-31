@@ -13,22 +13,9 @@ import java.util.List;
 
 public class Config {
 
-    private final Main plugin;
-
-    private static ConfigurationLoader<CommentedConfigurationNode> loader;
     public static CommentedConfigurationNode config;
-
-    public Config(Main main) throws IOException, ObjectMappingException {
-        plugin = main;
-        loader = HoconConfigurationLoader.builder().setPath(plugin.defaultConf).build();
-        config = loader.load();
-        configCheck();
-    }
-
     public static boolean logToFile;
-
     public static List<String> sendToChestWhitelist;
-
     public static String defaultReason = "";
     public static Boolean defaultUsage = true;
     public static Boolean defaultBreaking = true;
@@ -37,6 +24,14 @@ public class Config {
     public static Boolean defaultDrop = false;
     public static Boolean defaultCraft = true;
     public static Boolean defaultWorld = false;
+    private static ConfigurationLoader<CommentedConfigurationNode> loader;
+    private final Main plugin;
+    public Config(Main main) throws IOException, ObjectMappingException {
+        plugin = main;
+        loader = HoconConfigurationLoader.builder().setPath(plugin.defaultConf).build();
+        config = loader.load();
+        configCheck();
+    }
 
     public void configCheck() throws IOException, ObjectMappingException {
 

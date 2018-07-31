@@ -44,22 +44,17 @@ import java.util.*;
 public class Main {
 
     private static Main instance;
-    private Game game;
-
-    @Inject
-    private Logger logger;
-
-    @Inject
-    private Metrics metrics;
-
     @Inject
     @DefaultConfig(sharedRoot = false)
     public Path defaultConf;
-
     @Inject
     @ConfigDir(sharedRoot = false)
     public Path ConfigDir;
-
+    private Game game;
+    @Inject
+    private Logger logger;
+    @Inject
+    private Metrics metrics;
     private CommandManager cmdManager = Sponge.getCommandManager();
 
     private Map<String, ItemData> items;
@@ -234,7 +229,7 @@ public class Main {
                     Config.defaultCraft,
                     Config.defaultWorld
             ));
-            logToFile("ban-list", playerName + " added " +itemName+ " to the ban list");
+            logToFile("ban-list", playerName + " added " + itemName + " to the ban list");
         }
     }
 
@@ -260,7 +255,7 @@ public class Main {
                                             int finalZ = z;
                                             Sponge.getScheduler().createTaskBuilder().execute(() -> {
                                                 blockLoc.setBlock(BlockTypes.AIR.getDefaultState());
-                                                logToFile("action-log", "Removed banned block:" +item.getItemname()+ " at x:" + finalX + " y:" + finalY + " z:" + finalZ);
+                                                logToFile("action-log", "Removed banned block:" + item.getItemname() + " at x:" + finalX + " y:" + finalY + " z:" + finalZ);
                                             }).submit(Sponge.getPluginManager().getPlugin("mmcrestrict").get().getInstance().get());
                                         }
                                     }

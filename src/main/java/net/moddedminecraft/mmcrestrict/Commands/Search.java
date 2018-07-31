@@ -50,9 +50,9 @@ public class Search implements CommandExecutor {
                                 BlockState block = chunk.getBlock(x, y, z);
                                 if (block.getType().getId().equals(itemType.getId())) {
                                     Text.Builder send = Text.builder();
-                                    send.append(plugin.fromLegacy("&6Block found: &7"+itemType.getTranslation().get()+" &6at x:&7" + x + " &6y:&7" + y + " &6z:&7" +z));
-                                    send.onClick(TextActions.runCommand("/tppos "+x+ " "+y+" "+z));
-                                    send.onHover(TextActions.showText(plugin.fromLegacy("Teleport to x:" + x + " y:" + y + " z:" +z)));
+                                    send.append(plugin.fromLegacy("&6Block found: &7" + itemType.getTranslation().get() + " &6at x:&7" + x + " &6y:&7" + y + " &6z:&7" + z));
+                                    send.onClick(TextActions.runCommand("/tppos " + x + " " + y + " " + z));
+                                    send.onHover(TextActions.showText(plugin.fromLegacy("Teleport to x:" + x + " y:" + y + " z:" + z)));
                                     contents.add(send.build());
                                 }
                             }

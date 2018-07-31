@@ -15,7 +15,8 @@ public class ItemData extends ItemDataUtil {
 
     public static class ItemDataSerializer implements TypeSerializer<ItemData> {
         @SuppressWarnings("serial")
-        final public static TypeToken<List<ItemData>> token = new TypeToken<List<ItemData>>() {};
+        final public static TypeToken<List<ItemData>> token = new TypeToken<List<ItemData>>() {
+        };
 
         @Override
         public ItemData deserialize(TypeToken<?> token, ConfigurationNode node) throws ObjectMappingException {

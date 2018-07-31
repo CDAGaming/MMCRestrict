@@ -43,7 +43,7 @@ public class Remove implements CommandExecutor {
             plugin.logToFile("ban-list", src.getName() + " removed an item from the ban list");
             src.sendMessage(Text.of("Item was removed the list."));
         } else {
-            plugin.logToFile("ban-list", src.getName() + " removed " +itemName+ " from the ban list");
+            plugin.logToFile("ban-list", src.getName() + " removed " + itemName + " from the ban list");
             src.sendMessage(Text.of(itemName + " was removed the list."));
 
         }

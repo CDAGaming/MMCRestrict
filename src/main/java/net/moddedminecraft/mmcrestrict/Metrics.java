@@ -16,32 +16,29 @@ import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.scheduler.Task;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.zip.GZIPOutputStream;
 
 /**
  * bStats collects some data for plugin authors.
- *
+ * <p>
  * Check out https://bStats.org/ to learn more about bStats!
  */
 public class Metrics {
+
+    // The version of this bStats class
+    public static final int B_STATS_VERSION = 1;
+    // The url to which the data is sent
+    private static final String URL = "https://bStats.org/submitData/sponge";
+    // A list with all known metrics class objects including this one
+    private static final List<Object> knownMetricsInstances = new ArrayList<>();
+    // We use this flag to ensure only one instance of this class exist
+    private static boolean created = false;
 
     static {
         // You can use the property to disable the check in your test environment
@@ -57,36 +54,18 @@ public class Metrics {
         }
     }
 
-    // The version of this bStats class
-    public static final int B_STATS_VERSION = 1;
-
-    // The url to which the data is sent
-    private static final String URL = "https://bStats.org/submitData/sponge";
-
-    // We use this flag to ensure only one instance of this class exist
-    private static boolean created = false;
-
-    // The logger
-    private Logger logger;
-
     // The plugin
     private final PluginContainer plugin;
-
-    // Is bStats enabled on this server?
-    private boolean enabled;
-
-    // The uuid of the server
-    private String serverUUID;
-
-    // Should failed requests be logged?
-    private boolean logFailedRequests = false;
-
-    // A list with all known metrics class objects including this one
-    private static final List<Object> knownMetricsInstances = new ArrayList<>();
-
     // A list with all custom charts
     private final List<CustomChart> charts = new ArrayList<>();
-
+    // The logger
+    private Logger logger;
+    // Is bStats enabled on this server?
+    private boolean enabled;
+    // The uuid of the server
+    private String serverUUID;
+    // Should failed requests be logged?
+    private boolean logFailedRequests = false;
     // The config path
     private Path configDir;
 
@@ -130,23 +109,13 @@ public class Metrics {
         } else {
             // We aren't the first so we link to the first metrics class
             try {
-                usedMetricsClass.getMethod("linkMetrics", Object.class).invoke(null,this);
+                usedMetricsClass.getMethod("linkMetrics", Object.class).invoke(null, this);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 if (logFailedRequests) {
                     logger.warn("Failed to link to first metrics class {}!", usedMetricsClass.getName(), e);
                 }
             }
         }
-    }
-
-    /**
-     * Adds a custom chart.
-     *
-     * @param chart The chart to add.
-     */
-    public void addCustomChart(CustomChart chart) {
-        Validate.notNull(chart, "Chart cannot be null");
-        charts.add(chart);
     }
 
     /**
@@ -157,6 +126,66 @@ public class Metrics {
      */
     public static void linkMetrics(Object metrics) {
         knownMetricsInstances.add(metrics);
+    }
+
+    /**
+     * Sends the data to the bStats server.
+     *
+     * @param data The data to send.
+     * @throws Exception If the request failed.
+     */
+    private static void sendData(JsonObject data) throws Exception {
+        Validate.notNull(data, "Data cannot be null");
+        HttpsURLConnection connection = (HttpsURLConnection) new URL(URL).openConnection();
+
+        // Compress the data to save bandwidth
+        byte[] compressedData = compress(data.toString());
+
+        // Add headers
+        connection.setRequestMethod("POST");
+        connection.addRequestProperty("Accept", "application/json");
+        connection.addRequestProperty("Connection", "close");
+        connection.addRequestProperty("Content-Encoding", "gzip"); // We gzip our request
+        connection.addRequestProperty("Content-Length", String.valueOf(compressedData.length));
+        connection.setRequestProperty("Content-Type", "application/json"); // We send our data in JSON format
+        connection.setRequestProperty("User-Agent", "MC-Server/" + B_STATS_VERSION);
+
+        // Send data
+        connection.setDoOutput(true);
+        DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
+        outputStream.write(compressedData);
+        outputStream.flush();
+        outputStream.close();
+
+        connection.getInputStream().close(); // We don't care about the response - Just send our data :)
+    }
+
+    /**
+     * Gzips the given String.
+     *
+     * @param str The string to gzip.
+     * @return The gzipped String.
+     * @throws IOException If the compression failed.
+     */
+    private static byte[] compress(final String str) throws IOException {
+        if (str == null) {
+            return null;
+        }
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        GZIPOutputStream gzip = new GZIPOutputStream(outputStream);
+        gzip.write(str.getBytes("UTF-8"));
+        gzip.close();
+        return outputStream.toByteArray();
+    }
+
+    /**
+     * Adds a custom chart.
+     *
+     * @param chart The chart to add.
+     */
+    public void addCustomChart(CustomChart chart) {
+        Validate.notNull(chart, "Chart cannot be null");
+        charts.add(chart);
     }
 
     /**
@@ -205,7 +234,7 @@ public class Metrics {
                 Task.Builder taskBuilder = scheduler.createTaskBuilder();
                 taskBuilder.execute(() -> submitData()).submit(plugin);
             }
-        }, 1000*60*5, 1000*60*30);
+        }, 1000 * 60 * 5, 1000 * 60 * 30);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
         // WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!
         // WARNING: Just don't do it!
@@ -263,13 +292,14 @@ public class Metrics {
                 if (plugin instanceof JsonObject) {
                     pluginData.add((JsonObject) plugin);
                 }
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) { }
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+            }
         }
 
         data.add("plugins", pluginData);
 
         // Create a new thread for the connection to the bStats server
-        new Thread(() ->  {
+        new Thread(() -> {
             try {
                 // Send the data
                 sendData(data);
@@ -339,7 +369,8 @@ public class Metrics {
                 try {
                     // Let's check if a class with the given name exists.
                     return Class.forName(className);
-                } catch (ClassNotFoundException ignored) { }
+                } catch (ClassNotFoundException ignored) {
+                }
             }
             writeFile(tempFile, getClass().getName());
             return getClass();
@@ -364,7 +395,7 @@ public class Metrics {
         }
         try (
                 FileReader fileReader = new FileReader(file);
-                BufferedReader bufferedReader =  new BufferedReader(fileReader);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
         ) {
             return bufferedReader.readLine();
         }
@@ -389,56 +420,6 @@ public class Metrics {
             bufferedWriter.newLine();
             bufferedWriter.write("Note: This class only exists for internal purpose. You can ignore it :)");
         }
-    }
-
-    /**
-     * Sends the data to the bStats server.
-     *
-     * @param data The data to send.
-     * @throws Exception If the request failed.
-     */
-    private static void sendData(JsonObject data) throws Exception {
-        Validate.notNull(data, "Data cannot be null");
-        HttpsURLConnection connection = (HttpsURLConnection) new URL(URL).openConnection();
-
-        // Compress the data to save bandwidth
-        byte[] compressedData = compress(data.toString());
-
-        // Add headers
-        connection.setRequestMethod("POST");
-        connection.addRequestProperty("Accept", "application/json");
-        connection.addRequestProperty("Connection", "close");
-        connection.addRequestProperty("Content-Encoding", "gzip"); // We gzip our request
-        connection.addRequestProperty("Content-Length", String.valueOf(compressedData.length));
-        connection.setRequestProperty("Content-Type", "application/json"); // We send our data in JSON format
-        connection.setRequestProperty("User-Agent", "MC-Server/" + B_STATS_VERSION);
-
-        // Send data
-        connection.setDoOutput(true);
-        DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
-        outputStream.write(compressedData);
-        outputStream.flush();
-        outputStream.close();
-
-        connection.getInputStream().close(); // We don't care about the response - Just send our data :)
-    }
-
-    /**
-     * Gzips the given String.
-     *
-     * @param str The string to gzip.
-     * @return The gzipped String.
-     * @throws IOException If the compression failed.
-     */
-    private static byte[] compress(final String str) throws IOException {
-        if (str == null) {
-            return null;
-        }
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        GZIPOutputStream gzip = new GZIPOutputStream(outputStream);
-        gzip.write(str.getBytes("UTF-8"));
-        gzip.close();
-        return outputStream.toByteArray();
     }
 
     /**
@@ -494,7 +475,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public SimplePie(String chartId, Callable<String> callable) {
@@ -525,7 +506,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public AdvancedPie(String chartId, Callable<Map<String, Integer>> callable) {
@@ -569,7 +550,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public DrilldownPie(String chartId, Callable<Map<String, Map<String, Integer>>> callable) {
@@ -618,7 +599,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public SingleLineChart(String chartId, Callable<Integer> callable) {
@@ -650,7 +631,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public MultiLineChart(String chartId, Callable<Map<String, Integer>> callable) {
@@ -695,7 +676,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public SimpleBarChart(String chartId, Callable<Map<String, Integer>> callable) {
@@ -733,7 +714,7 @@ public class Metrics {
         /**
          * Class constructor.
          *
-         * @param chartId The id of the chart.
+         * @param chartId  The id of the chart.
          * @param callable The callable which is used to request the chart data.
          */
         public AdvancedBarChart(String chartId, Callable<Map<String, int[]>> callable) {
